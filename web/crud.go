@@ -1,16 +1,20 @@
 package web
 
 import (
+	"crud-server/storage"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 type DataHandler struct {
+	StorageData *storage.Data
 }
 
 // NewDataHandler 1
-func (d *DataHandler) NewDataHandler() {
+func NewDataHandler(DB *storage.Data) *DataHandler {
+	return &DataHandler{DB}
 }
 
 // MainPage write main page
@@ -31,6 +35,13 @@ func (d *DataHandler) GetManById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	//id, _ := strconv.Atoi(vars["manID"])
 	w.Write([]byte("Take man with id " + vars["manID"]))
+	err := json.NewEncoder(w).Encode(d.StorageData.All[vars["manID"]])
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	//w.Write((d.StorageData.All[vars["manID"]]))
 }
 
 //func (d *storage.Data) CreateMan(w http.ResponseWriter, r *http.Request) {

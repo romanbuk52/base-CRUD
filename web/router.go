@@ -7,7 +7,7 @@ import (
 // NewPeopleStoreRouter router
 func NewPeopleStoreRouter(handler *DataHandler) *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/man", handler.GetMan).Methods("GET")
+	router.HandleFunc("/", handler.MainPage).Methods("GET")
 	router.HandleFunc("/man", handler.GetMan).Methods("GET")
 	router.HandleFunc("/man/{manID}", handler.GetManById).Methods("GET")
 	//router.HandleFunc("/man/", CreateMan).Methods("POST")
