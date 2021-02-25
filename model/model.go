@@ -1,9 +1,9 @@
 package model
 
 type Man struct {
-	id        int
-	FirstName string
-	LastName  string
-	height    int
-	weight    int
+	ID        string `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Height    int    `json:"height"`
+	Weight    int    `json:"weight"`
 }

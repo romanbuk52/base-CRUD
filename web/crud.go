@@ -1,10 +1,12 @@
 package web
 
 import (
+	"crud-server/model"
 	"crud-server/storage"
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -18,56 +20,89 @@ func NewDataHandler(DB *storage.Data) *DataHandler {
 }
 
 // MainPage write main page
-func (d *DataHandler) MainPage(w http.ResponseWriter, r *http.Request) {
+func (dh *DataHandler) MainPage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("welcome in man database"))
 
 }
 
-// GetMan Get man with UUID
-func (d *DataHandler) GetMan(w http.ResponseWriter, r *http.Request) {
+// GetMan Get man with
+func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 	//	manID :=
 
 	w.Write([]byte("It works!"))
 }
 
-// GetManById .
-func (d *DataHandler) GetManById(w http.ResponseWriter, r *http.Request) {
+// GetManByID get man by ID
+func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	//id, _ := strconv.Atoi(vars["manID"])
-	w.Write([]byte("Take man with id " + vars["manID"]))
-	err := json.NewEncoder(w).Encode(d.StorageData.All[vars["manID"]])
+	// w.Write([]byte("Take man with id " + vars["manID"]))
+	id := vars["manID"]
+	man, ok := dh.StorageData.All[id]
+	if !ok {
+		dh.SendError(w, http.StatusNotFound, ErrManNotFound)
+		return
+	}
+	err := json.NewEncoder(w).Encode(man)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	//w.Write((d.StorageData.All[vars["manID"]]))
 }
 
-//func (d *storage.Data) CreateMan(w http.ResponseWriter, r *http.Request) {
-//
-//	var NewMan man // to appoint variables "NewMan" structure "man"
-//
-//	err := json.NewDecoder(r.Body).Decode(&NewMan) //записали з тіла запиту в змінну "с"
-//
-//	if err != nil {
-//		w.WriteHeader(http.StatusBadRequest)
-//		return
-//	}
-//
-//	manID := uuid.New().String()
-//
-//	manDB[manID] := NewMan
-//
-//	w.WriteHeader(http.StatusCreated)
-//}
-//
-//func GetAllMan(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte("getall"))
-//}
-//func EditMan(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte("edit"))
-//}
-//func DeleteMan(w http.ResponseWriter, r *http.Request) {
-//	w.Write([]byte("delete"))
-//}
+// CreateMan create new man in database
+func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
+
+	var NewMan model.Man // to appoint variables "NewMan" structure "man"
+
+	// println(r.Body)
+	if err := json.NewDecoder(r.Body).Decode(&NewMan); //записали з тіла запиту в змінну "с"
+	err != nil {
+		dh.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// Generate new ID
+	manID := uuid.New().String()
+	if _, err := dh.StorageData.All[manID]; err != false {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	dh.StorageData.All[manID] = NewMan
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// UpdateMan edit man by ID
+func (dh *DataHandler) UpdateMan(w http.ResponseWriter, r *http.Request) {
+
+	var editMan model.Man
+	vars := mux.Vars(r)
+	id := vars["manID"]
+
+	if err := json.NewDecoder(r.Body).Decode(&editMan); err != nil {
+		dh.SendError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	dh.StorageData.All[id] = editMan
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// DeleteMan deleted man for ID
+func (dh *DataHandler) DeleteMan(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	id := vars["manID"]
+
+	_, ok := dh.StorageData.All[id]
+	if ok == false {
+		dh.SendError(w, http.StatusNotFound, ErrManNotFound)
+		return
+	}
+
+	delete(dh.StorageData.All, id)
+
+	w.WriteHeader(http.StatusOK)
+}
