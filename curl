@@ -1,7 +1,9 @@
-curl --header "Content-Type: application/json"   --request POST   --data '{"firstName":"xyz","lastName":"xyz","height":"123","weight":"321"}' http://localhost:8080/man
-
-curl -H "Content-Type: application/json"   --request POST   -d '{"FirstName":"xyz","LastName":"xyz","Height":"123","Weight":"321"}' - http://localhost:8080/man
-
 curl --header "Content-Type: application/json"   --request PUT   --data '{"firstName":"xyz","lastName":"xyz","height":123,"weight":321}' -o - http://localhost:8080/man/577
 
-curl   --request DELETE -o - http://localhost:8080/man/577
+curl --request DELETE -o - http://localhost:8080/man/577
+
+
+//add users
+curl --header "Content-Type: application/json"   --request POST   --data '{"firstName":"xyz","lastName":"xyz","height":123,"weight":321}' http://localhost:8080/man
+curl --header "Content-Type: application/json"   --request POST   --data '{"firstName":"Andriy","lastName":"xyz","height":900,"weight":900}' http://localhost:8080/man
+curl --header "Content-Type: application/json"   --request POST   --data '{"firstName":"Bogdan","lastName":"xyz","height":1000,"weight":1000}' http://localhost:8080/man

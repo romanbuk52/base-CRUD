@@ -1,8 +1,6 @@
 package web
 
 import (
-	"crud-server/model"
-	"crud-server/storage"
 	"encoding/json"
 	"net/http"
 
@@ -10,26 +8,51 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// DataHandler its struct datahandler
 type DataHandler struct {
-	StorageData *storage.Data
+	HumanStorage HumanStorage
+}
+
+// HumanStorage methods HumanStorage
+type HumanStorage interface {
+	Add(Man) error
+	Get(id string) (Man, error)
+	GetAll() ([]Man, error)
+	Edit(Man) error
+	Del(id string) error
+}
+
+type Man struct {
+	ID        string `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Height    int    `json:"height"`
+	Weight    int    `json:"weight"`
 }
 
 // NewDataHandler 1
-func NewDataHandler(DB *storage.Data) *DataHandler {
+func NewDataHandler(DB HumanStorage) *DataHandler {
 	return &DataHandler{DB}
 }
 
 // MainPage write main page
 func (dh *DataHandler) MainPage(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("welcome in man database"))
-
 }
 
-// GetMan Get man with
+// GetAllMan print all man in DB(map)
 func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
-	//	manID :=
+	// var cacheMap Man
+	w.Header().Set("Content-Type", "application/json")
+	data, err := dh.HumanStorage.GetAll()
+	if err != nil {
+		dh.SendError(w, http.StatusInternalServerError, err)
+	}
 
-	w.Write([]byte("It works!"))
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		dh.SendError(w, http.StatusInternalServerError, ErrJsonEncode)
+		return
+	}
 }
 
 // GetManByID get man by ID
@@ -37,14 +60,13 @@ func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// w.Write([]byte("Take man with id " + vars["manID"]))
 	id := vars["manID"]
-	man, ok := dh.StorageData.All[id]
-	if !ok {
+	man, err := dh.HumanStorage.Get(id)
+	if err != nil {
 		dh.SendError(w, http.StatusNotFound, ErrManNotFound)
 		return
 	}
-	err := json.NewEncoder(w).Encode(man)
 
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(man); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -53,7 +75,7 @@ func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 // CreateMan create new man in database
 func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 
-	var NewMan model.Man // to appoint variables "NewMan" structure "man"
+	var NewMan Man // to appoint variables "NewMan" structure "man"
 
 	// println(r.Body)
 	if err := json.NewDecoder(r.Body).Decode(&NewMan); //записали з тіла запиту в змінну "с"
@@ -63,12 +85,11 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate new ID
-	manID := uuid.New().String()
-	if _, err := dh.StorageData.All[manID]; err != false {
-		w.WriteHeader(http.StatusBadRequest)
+	NewMan.ID = uuid.New().String()
+	if err := dh.HumanStorage.Add(NewMan); err != nil {
+		dh.SendError(w, http.StatusBadRequest, err)
+		return
 	}
-
-	dh.StorageData.All[manID] = NewMan
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -76,16 +97,19 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 // UpdateMan edit man by ID
 func (dh *DataHandler) UpdateMan(w http.ResponseWriter, r *http.Request) {
 
-	var editMan model.Man
+	var editMan Man
 	vars := mux.Vars(r)
-	id := vars["manID"]
+	editMan.ID = vars["manID"]
 
 	if err := json.NewDecoder(r.Body).Decode(&editMan); err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	dh.StorageData.All[id] = editMan
+	if err := dh.HumanStorage.Edit(editMan); err != nil {
+		dh.SendError(w, http.StatusInternalServerError, err)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -96,13 +120,10 @@ func (dh *DataHandler) DeleteMan(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["manID"]
 
-	_, ok := dh.StorageData.All[id]
-	if ok == false {
-		dh.SendError(w, http.StatusNotFound, ErrManNotFound)
+	if err := dh.HumanStorage.Del(id); err != nil {
+		dh.SendError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	delete(dh.StorageData.All, id)
-
-	w.WriteHeader(http.StatusOK)
+	dh.SendResponse(w, http.StatusOK)
 }

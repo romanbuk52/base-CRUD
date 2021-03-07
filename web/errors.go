@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrManNotFound = errors.New("Man not found")
+	ErrJsonEncode  = errors.New("Json encode failed")
 )
 
 // responseError it`s structure sending error
@@ -28,12 +29,7 @@ func (dh *DataHandler) SendError(w http.ResponseWriter, statusCode int, err erro
 	}
 }
 
-type responseInterfaceError struct {
-	Interface   string `json:"interface"`
-	Description string `json:"description"`
-}
-
 // SendResponse this universal sender of interface errors
 func (dh *DataHandler) SendResponse(w http.ResponseWriter, value interface{}) {
-	sendErr2 := json.NewEncoder(w).Encode
+	json.NewEncoder(w).Encode(value)
 }

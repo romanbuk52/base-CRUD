@@ -1,21 +1,21 @@
 package storage
 
 import (
-	"crud-server/model"
+	"crud-server/web"
 	"sync"
 )
 
 type Data struct {
-	Mu  *sync.RWMutex
-	All map[string]model.Man
+	mu  *sync.RWMutex
+	all map[string]web.Man
 }
 
 func NewDB() *Data {
 	data := &Data{
-		All: make(map[string]model.Man),
-		Mu:  new(sync.RWMutex),
+		all: make(map[string]web.Man),
+		mu:  new(sync.RWMutex),
 	}
-	data.All["577"] = model.Man{
+	data.all["577"] = web.Man{
 		ID:        "577",
 		FirstName: "Andry",
 		LastName:  "Kamkin",
@@ -23,12 +23,42 @@ func NewDB() *Data {
 		Weight:    75,
 	}
 	return data
-	// return &Data{
-	// 	all: make(map[string]model.Man),
-	// 	mu:  new(sync.RWMutex),
-	// }
 }
 
-func DelMan() {
+func (d *Data) Add(m web.Man) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.all[m.ID] = m
+	return nil
+}
 
+func (d *Data) Get(id string) (web.Man, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	c := d.all[id]
+	return c, nil
+}
+
+func (d *Data) GetAll() ([]web.Man, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	res := make([]web.Man, 0, len(d.all)) //Різниця між 2 і 3 значенням.
+	for _, value := range d.all {
+		res = append(res, value)
+	}
+	return res, nil
+}
+
+func (d *Data) Edit(m web.Man) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.all[m.ID] = m
+	return nil
+}
+
+func (d *Data) Del(id string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	delete(d.all, id)
+	return nil
 }
