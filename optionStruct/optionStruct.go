@@ -1,16 +1,26 @@
 package optionStruct
 
-// NewData option func
-func NewData() {
+// CreateMan option func
+func GetAllMan() {
 
 }
 
-// EditData option func
-func EditData() {
+// CreateMan option func
+func GetManByID() {
 
 }
 
-// DelData option func
-func DelData() {
+// CreateMan option func
+func CreateMan() {
+
+}
+
+// UpdateMan option func
+func UpdateMan() {
+
+}
+
+// DeleteMan option func
+func DeleteMan() {
 
 }

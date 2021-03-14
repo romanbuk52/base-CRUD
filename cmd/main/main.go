@@ -1,16 +1,21 @@
 package main
 
 import (
-	"crud-server/storage"
+	"crud-server/storageSQL"
 	"crud-server/web"
 	"log"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
-	//db := storage.NewData()
-	//customDataHandler := customStruct.NewDataHandler(db)
-	//webDataHandler := web.NewDataHandler(customDataHandler)
-	data := storage.NewDB()
+	db, err := gorm.Open(sqlite.Open("storageSQL/storage2.db"))
+	if err != nil {
+		panic("failed to connect database")
+	}
+	// data := storage.NewDB()
+	data := storageSQL.NewDB(db)
 	handler := web.NewDataHandler(data)
 	router := web.NewPeopleStoreRouter(handler)
 	port := ":8080"

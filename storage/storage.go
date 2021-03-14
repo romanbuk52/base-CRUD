@@ -29,6 +29,7 @@ func (d *Data) Add(m web.Man) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.all[m.ID] = m
+
 	return nil
 }
 

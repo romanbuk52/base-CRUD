@@ -30,7 +30,7 @@ type Man struct {
 	Weight    int    `json:"weight"`
 }
 
-// NewDataHandler 1
+// NewDataHandler receive data
 func NewDataHandler(DB HumanStorage) *DataHandler {
 	return &DataHandler{DB}
 }
@@ -48,7 +48,7 @@ func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		dh.SendError(w, http.StatusInternalServerError, err)
 	}
-
+	//							<<
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		dh.SendError(w, http.StatusInternalServerError, ErrJsonEncode)
 		return
@@ -77,7 +77,7 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 
 	var NewMan Man // to appoint variables "NewMan" structure "man"
 
-	// println(r.Body)
+	// println(r.Body)				>>
 	if err := json.NewDecoder(r.Body).Decode(&NewMan); //записали з тіла запиту в змінну "с"
 	err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
