@@ -13,6 +13,7 @@ type DataHandler struct {
 	HumanStorage HumanStorage
 }
 
+//go:generate go run github.com/matryer/moq -out storage_mock_test.go . HumanStorage
 // HumanStorage methods HumanStorage
 type HumanStorage interface {
 	Add(Man) error
