@@ -1,5 +1,5 @@
 //  edit user
-curl --header "Content-Type: application/json"   --request PUT   --data '{"firstName":"xyz","lastName":"xyz","height":123,"weight":321}' -o - http://localhost:8080/man/577
+curl --header "Content-Type: application/json"   --request PUT   --data '{"firstName":"xyz","lastName":"xyz","height":123,"weight":321}' -o - http://localhost:8080/man/ea323b32-4600-438f-94f2-dbba2d38af7c
 
 // get all
 curl --header "Content-Type: application/json"   --request POST  http://localhost:8080/man/all

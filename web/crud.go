@@ -91,7 +91,7 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return
 	}
-
+	println(NewMan.ID)
 	w.WriteHeader(http.StatusCreated)
 }
 

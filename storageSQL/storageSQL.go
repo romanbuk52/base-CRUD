@@ -79,7 +79,7 @@ func (d *Data) Add(m web.Man) error {
 func (d *Data) Get(id string) (m web.Man, er error) {
 	var readMan Human
 
-	res := d.db.First(readMan, id)
+	res := d.db.First(&readMan, "ID = ?", id)
 	m = asWebModel(&readMan)
 
 	return m, res.Error
@@ -87,25 +87,24 @@ func (d *Data) Get(id string) (m web.Man, er error) {
 
 func (d *Data) GetAll() (m []web.Man, er error) {
 	var readHumans Human
-	var convertMan web.Man
 	result := d.db.Find(&readHumans)
-	convertMan = asWebModel(&readHumans)
 	sliceOut := make([]web.Man, 0, int(result.RowsAffected))
+	convertMan := asWebModel(&readHumans)
 	sliceOut = append(sliceOut, convertMan)
-
+	
 	return sliceOut, result.Error
 }
 
 func (d *Data) Edit(m web.Man) error {
 	newHuman := fromWebModel(m)
-	result := d.db.Model(newHuman.ID).Updates(newHuman)
+	result := d.db.Model(&newHuman.ID).Updates(newHuman)
 
 	return result.Error
 }
 
 func (d *Data) Del(id string) error {
 	var human Human
-	result := d.db.Delete(human, id)
+	result := d.db.Delete(&human,"ID = ?", id)
 
 	return result.Error
 }
