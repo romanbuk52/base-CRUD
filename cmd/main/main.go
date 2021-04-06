@@ -3,6 +3,7 @@ package main
 import (
 	"crud-server/storageSQL"
 	"crud-server/web"
+	"flag"
 	"log"
 
 	"gorm.io/driver/sqlite"
@@ -10,10 +11,15 @@ import (
 )
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("storageSQL/storage2.db"))
+
+	pathDB := flag.String("pathDB", "/home/roman/go/src/crud-server/storageSQL/storage0.db", "Input path to database")
+	flag.Parse()
+
+	db, err := gorm.Open(sqlite.Open(string(*pathDB)))
 	if err != nil {
 		panic("failed to connect database")
 	}
+
 	// data := storage.NewDB()
 	data := storageSQL.NewDB(db)
 	handler := web.NewDataHandler(data)

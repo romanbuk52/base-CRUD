@@ -43,11 +43,12 @@ func (dh *DataHandler) MainPage(w http.ResponseWriter, r *http.Request) {
 
 // GetAllMan print all man in DB(map)
 func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
-	// var cacheMap Man
 	w.Header().Set("Content-Type", "application/json")
+
 	data, err := dh.HumanStorage.GetAll()
 	if err != nil {
 		dh.SendError(w, http.StatusInternalServerError, err)
+		return
 	}
 	//							<<
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -59,8 +60,8 @@ func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 // GetManByID get man by ID
 func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	// w.Write([]byte("Take man with id " + vars["manID"]))
 	id := vars["manID"]
+
 	man, err := dh.HumanStorage.Get(id)
 	if err != nil {
 		dh.SendError(w, http.StatusNotFound, ErrManNotFound)
@@ -78,7 +79,7 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 
 	var NewMan Man // to appoint variables "NewMan" structure "man"
 
-	// println(r.Body)				>>
+	// 								>>
 	if err := json.NewDecoder(r.Body).Decode(&NewMan); //записали з тіла запиту в змінну "с"
 	err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
@@ -91,6 +92,7 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return
 	}
+
 	println(NewMan.ID)
 	w.WriteHeader(http.StatusCreated)
 }
@@ -126,5 +128,5 @@ func (dh *DataHandler) DeleteMan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dh.SendResponse(w, http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }

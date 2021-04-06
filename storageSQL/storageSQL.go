@@ -16,17 +16,6 @@ type Human struct {
 	Weight    int    `gorm:"weight"`
 }
 
-// // asWebModel converter database model >> webModel
-// func asWebModel(h *Human) struct {
-// 	m.ID = h.ID
-// 	m.FirstName = h.FirstName
-// 	m.LastName = h.LastName
-// 	m.Height = h.Height
-// 	m.Weight = h.Weight
-
-// 	return
-// }
-
 // asWebModel converter database model >> webModel
 func asWebModel(h *Human) (m web.Man) {
 	m.ID = h.ID
@@ -48,6 +37,14 @@ func fromWebModel(m web.Man) (h Human) {
 
 	return
 }
+func asWebModelSlice(h []Human) (m []web.Man) {
+	for _, value := range h {
+		cach := asWebModel(&value)
+		m = append(m, cach)
+	}
+
+	return m
+}
 
 // Data 000
 type Data struct {
@@ -55,8 +52,7 @@ type Data struct {
 	db *gorm.DB
 }
 
-
-// NewDB it`s new *Data
+// NewDB it`s a new *Data
 func NewDB(db *gorm.DB) *Data {
 	data := &Data{
 		db: db,
@@ -64,6 +60,7 @@ func NewDB(db *gorm.DB) *Data {
 	if err := db.AutoMigrate(&Human{}); err != nil {
 		println(err)
 	}
+
 	return data
 }
 
@@ -86,25 +83,29 @@ func (d *Data) Get(id string) (m web.Man, er error) {
 }
 
 func (d *Data) GetAll() (m []web.Man, er error) {
-	var readHumans Human
+	readHumans := make([]Human, 0, 10)
+	convertMan := make([]web.Man, 0, 10)
+
+	// println("test1.1", readHumans) // for tests
 	result := d.db.Find(&readHumans)
-	sliceOut := make([]web.Man, 0, int(result.RowsAffected))
-	convertMan := asWebModel(&readHumans)
-	sliceOut = append(sliceOut, convertMan)
-	
-	return sliceOut, result.Error
+	// println("test1.2", readHumans) // for tests
+	// println("test2.1", convertMan) // for tests
+	convertMan = asWebModelSlice(readHumans)
+	// println("test2.2", convertMan) // for tests
+
+	return convertMan, result.Error
 }
 
 func (d *Data) Edit(m web.Man) error {
 	newHuman := fromWebModel(m)
-	result := d.db.Model(&newHuman.ID).Updates(newHuman)
+	result := d.db.Model(&newHuman).Updates(newHuman)
 
 	return result.Error
 }
 
 func (d *Data) Del(id string) error {
 	var human Human
-	result := d.db.Delete(&human,"ID = ?", id)
+	result := d.db.Delete(&human, "ID = ?", id)
 
 	return result.Error
 }

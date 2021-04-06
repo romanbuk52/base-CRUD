@@ -28,8 +28,3 @@ func (dh *DataHandler) SendError(w http.ResponseWriter, statusCode int, err erro
 		log.Printf("response send error : %s", sendErr)
 	}
 }
-
-// SendResponse this universal sender of interface errors
-func (dh *DataHandler) SendResponse(w http.ResponseWriter, value interface{}) {
-	json.NewEncoder(w).Encode(value)
-}
