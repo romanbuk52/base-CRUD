@@ -60,7 +60,10 @@ func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 // GetManByID get man by ID
 func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["manID"]
+	id, ok := vars["manID"]
+	if !ok {
+		dh.SendError(w, http.StatusBadRequest, ErrManNotFound)
+	}
 
 	man, err := dh.HumanStorage.Get(id)
 	if err != nil {
@@ -80,14 +83,13 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 	var NewMan Man // to appoint variables "NewMan" structure "man"
 
 	// 								>>
-	if err := json.NewDecoder(r.Body).Decode(&NewMan); //записали з тіла запиту в змінну "с"
-	err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&NewMan); err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	// Generate new ID
 	NewMan.ID = uuid.New().String()
+
 	if err := dh.HumanStorage.Add(NewMan); err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return

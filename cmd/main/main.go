@@ -13,20 +13,20 @@ import (
 func main() {
 
 	pathDB := flag.String("pathDB", "/home/roman/go/src/crud-server/storageSQL/storage0.db", "Input path to database")
+	port := flag.String("port", ":8080", "port of server")
 	flag.Parse()
 
-	db, err := gorm.Open(sqlite.Open(string(*pathDB)))
+	db, err := gorm.Open(sqlite.Open(*pathDB))
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatalf("failed to connect database: %s", err)
 	}
 
 	// data := storage.NewDB()
 	data := storageSQL.NewDB(db)
 	handler := web.NewDataHandler(data)
 	router := web.NewPeopleStoreRouter(handler)
-	port := ":8080"
-	server := web.NewServer(port, router)
-	println("server started, port:", port)
+	server := web.NewServer(*port, router)
+	println("server started, port:", *port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

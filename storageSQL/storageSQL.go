@@ -85,13 +85,8 @@ func (d *Data) Get(id string) (m web.Man, er error) {
 func (d *Data) GetAll() (m []web.Man, er error) {
 	readHumans := make([]Human, 0, 10)
 	convertMan := make([]web.Man, 0, 10)
-
-	// println("test1.1", readHumans) // for tests
 	result := d.db.Find(&readHumans)
-	// println("test1.2", readHumans) // for tests
-	// println("test2.1", convertMan) // for tests
 	convertMan = asWebModelSlice(readHumans)
-	// println("test2.2", convertMan) // for tests
 
 	return convertMan, result.Error
 }
