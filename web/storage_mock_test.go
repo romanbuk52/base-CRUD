@@ -14,7 +14,7 @@ var _ HumanStorage = &HumanStorageMock{}
 // HumanStorageMock is a mock implementation of HumanStorage.
 //
 // 	func TestSomethingThatUsesHumanStorage(t *testing.T) {
-//
+
 // 		// make and configure a mocked HumanStorage
 // 		mockedHumanStorage := &HumanStorageMock{
 // 			AddFunc: func(man Man) error {
@@ -33,10 +33,10 @@ var _ HumanStorage = &HumanStorageMock{}
 // 				panic("mock out the GetAll method")
 // 			},
 // 		}
-//
+
 // 		// use mockedHumanStorage in code that requires HumanStorage
 // 		// and then make assertions.
-//
+
 // 	}
 type HumanStorageMock struct {
 	// AddFunc mocks the Add method.

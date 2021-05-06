@@ -1,24 +1,35 @@
 package web
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDataHandler_GetManByID(t *testing.T) {
-	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest("http.MethodGet", "http://localhost:8080/man/123", nil)
+	vars := map[string]string{
+		"manID": "abcd",
+	}
+	request = mux.SetURLVars(request, vars)
+
 	tests := []struct {
-		name    string
-		storage *HumanStorageMock
-		w       http.ResponseWriter
-		r       *http.Request
+		name          string
+		storage       *HumanStorageMock
+		r             *http.Request
+		expectedError string
 	}{
 		{
-			name: "gratesucces",
-			w:    recorder,
-			r:    &http.Request{},
+			name:          "succes",
+			r:             &http.Request{},
+			expectedError: "",
 			storage: &HumanStorageMock{
 				GetFunc: func(id string) (Man, error) {
 					return Man{
@@ -27,35 +38,13 @@ func TestDataHandler_GetManByID(t *testing.T) {
 				},
 			},
 		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dh := &DataHandler{
-				HumanStorage: tt.storage,
-			}
-			dh.GetManByID(tt.w, tt.r)
-			fmt.Printf("%d", len(tt.storage.GetCalls()))
-		})
-	}
-
-}
-
-func TestDataHandler_GetAllMan(t *testing.T) {
-	recorder := httptest.NewRecorder()
-	tests := []struct {
-		name    string
-		storage *HumanStorageMock
-		w       http.ResponseWriter
-		r       *http.Request
-	}{
 		{
-			name: "gratesucces getAll",
-			w:    recorder,
-			r:    &http.Request{},
+			name:          "DB_error",
+			r:             request,
+			expectedError: ErrManNotFound.Error(),
 			storage: &HumanStorageMock{
-				GetAllFunc: func() ([]Man, error) {
-					return []Man{}, nil
+				GetFunc: func(id string) (Man, error) {
+					return Man{}, errors.New("test")
 				},
 			},
 		},
@@ -66,7 +55,73 @@ func TestDataHandler_GetAllMan(t *testing.T) {
 			dh := &DataHandler{
 				HumanStorage: tt.storage,
 			}
-			dh.GetAllMan(tt.w, tt.r)
+			recorder := httptest.NewRecorder()
+
+			dh.GetManByID(recorder, tt.r)
+
+			resultResponse := recorder.Result()
+			if tt.expectedError != "" {
+				var responseErr responseError
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
+				assert.Equal(t, tt.expectedError, responseErr.Description)
+
+				return
+			}
+
+			var responseAnswer Man
+			assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
+			assert.Equal(t, Man{}, responseAnswer)
+
+			fmt.Printf("%d", len(tt.storage.GetCalls()))
+		})
+	}
+
+}
+
+func TestDataHandler_GetAllMan(t *testing.T) {
+	tests := []struct {
+		name          string
+		storage       *HumanStorageMock
+		r             *http.Request
+		expectedError string
+	}{
+		{
+			name:          "succes",
+			r:             &http.Request{},
+			expectedError: "",
+			storage: &HumanStorageMock{
+				GetAllFunc: func() ([]Man, error) {
+					return []Man{}, nil
+				},
+			},
+		},
+		{
+			name:          "succes",
+			r:             &http.Request{},
+			expectedError: "DBError",
+			storage: &HumanStorageMock{
+				GetAllFunc: func() ([]Man, error) {
+					return []Man{}, errors.New("DBError")
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dh := &DataHandler{
+				HumanStorage: tt.storage,
+			}
+			recorder := httptest.NewRecorder()
+			dh.GetAllMan(recorder, tt.r)
+			resultResponse := recorder.Result()
+			if tt.expectedError != "" {
+				var responseErr responseError
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
+				assert.Equal(t, tt.expectedError, responseErr.Description)
+
+				return
+			}
 			fmt.Printf("%d", len(tt.storage.GetAllCalls()))
 		})
 	}
@@ -74,18 +129,50 @@ func TestDataHandler_GetAllMan(t *testing.T) {
 }
 
 func TestDataHandler_CreateMan(t *testing.T) {
-	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/man", nil)
+	data0, err := json.Marshal("test")
+	data1, err := json.Marshal([]Man{})
+	assert.NoError(t, err)
+
 	tests := []struct {
-		name    string
-		storage *HumanStorageMock
-		w       http.ResponseWriter
-		r       *http.Request
+		name          string
+		storage       *HumanStorageMock
+		r             *http.Request
+		expectedError string
 	}{
 		{
-			name: "test Create",
-			w:    recorder,
-			r:    req,
+			name:          "test Create",
+			r:             httptest.NewRequest(http.MethodPost, "/man", nil),
+			expectedError: "",
+			storage: &HumanStorageMock{
+				AddFunc: func(Man) error {
+					return nil
+				},
+			},
+		},
+		{
+			name:          "test Create",
+			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer(data0)),
+			expectedError: "",
+			storage: &HumanStorageMock{
+				AddFunc: func(Man) error {
+					return nil
+				},
+			},
+		},
+		{
+			name:          "test decoder error",
+			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer([]byte("test"))),
+			expectedError: "invalid character 'e' in literal true (expecting 'r')",
+			storage: &HumanStorageMock{
+				AddFunc: func(Man) error {
+					return nil
+				},
+			},
+		},
+		{
+			name:          "test database error",
+			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer(data1)),
+			expectedError: "",
 			storage: &HumanStorageMock{
 				AddFunc: func(Man) error {
 					return nil
@@ -99,7 +186,21 @@ func TestDataHandler_CreateMan(t *testing.T) {
 			dh := &DataHandler{
 				HumanStorage: tt.storage,
 			}
-			dh.CreateMan(tt.w, tt.r)
+			recorder := httptest.NewRecorder()
+			dh.CreateMan(recorder, tt.r)
+			resultResponse := recorder.Result()
+			if tt.expectedError != "" {
+				var responseErr responseError
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
+				assert.Equal(t, tt.expectedError, responseErr.Description)
+				// t.Fatal(tt.expectedError, responseErr.Description)
+
+				return
+			}
+			// var responseAnswer Man
+			// assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
+			// assert.Equal(t, Man{}, responseAnswer)
+
 			fmt.Printf("%d", len(tt.storage.AddCalls()))
 		})
 	}
@@ -108,7 +209,7 @@ func TestDataHandler_CreateMan(t *testing.T) {
 
 func TestDataHandler_UpdateMan(t *testing.T) {
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/man", nil)
+	req := httptest.NewRequest(http.MethodPost, "/man", nil)
 	tests := []struct {
 		name    string
 		storage *HumanStorageMock

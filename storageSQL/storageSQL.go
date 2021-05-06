@@ -85,22 +85,22 @@ func (d *Data) Get(id string) (m web.Man, er error) {
 func (d *Data) GetAll() (m []web.Man, er error) {
 	readHumans := make([]Human, 0, 10)
 	convertMan := make([]web.Man, 0, 10)
-	result := d.db.Find(&readHumans)
+	res := d.db.Find(&readHumans)
 	convertMan = asWebModelSlice(readHumans)
 
-	return convertMan, result.Error
+	return convertMan, res.Error
 }
 
 func (d *Data) Edit(m web.Man) error {
 	newHuman := fromWebModel(m)
-	result := d.db.Model(&newHuman).Updates(newHuman)
+	res := d.db.Model(&newHuman).Updates(newHuman)
 
-	return result.Error
+	return res.Error
 }
 
 func (d *Data) Del(id string) error {
 	var human Human
-	result := d.db.Delete(&human, "ID = ?", id)
+	res := d.db.Delete(&human, "ID = ?", id)
 
-	return result.Error
+	return res.Error
 }

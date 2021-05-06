@@ -52,7 +52,7 @@ func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 	}
 	//							<<
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		dh.SendError(w, http.StatusInternalServerError, ErrJsonEncode)
+		dh.SendError(w, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -72,7 +72,7 @@ func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(man); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		dh.SendError(w, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -80,7 +80,7 @@ func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 // CreateMan create new man in database
 func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 
-	var NewMan Man // to appoint variables "NewMan" structure "man"
+	var NewMan Man
 
 	// 								>>
 	if err := json.NewDecoder(r.Body).Decode(&NewMan); err != nil {
