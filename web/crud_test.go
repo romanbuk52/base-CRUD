@@ -129,8 +129,7 @@ func TestDataHandler_GetAllMan(t *testing.T) {
 }
 
 func TestDataHandler_CreateMan(t *testing.T) {
-	data0, err := json.Marshal("test")
-	data1, err := json.Marshal([]Man{})
+	data1, err := json.Marshal(Man{})
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -150,32 +149,23 @@ func TestDataHandler_CreateMan(t *testing.T) {
 			},
 		},
 		{
-			name:          "test Create",
-			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer(data0)),
-			expectedError: "",
-			storage: &HumanStorageMock{
-				AddFunc: func(Man) error {
-					return nil
-				},
-			},
-		},
-		{
-			name:          "test decoder error",
+			name:          "test bad data in request, decoder error",
 			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer([]byte("test"))),
 			expectedError: "invalid character 'e' in literal true (expecting 'r')",
 			storage: &HumanStorageMock{
 				AddFunc: func(Man) error {
 					return nil
+
 				},
 			},
 		},
 		{
 			name:          "test database error",
 			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewBuffer(data1)),
-			expectedError: "",
+			expectedError: "DBError",
 			storage: &HumanStorageMock{
 				AddFunc: func(Man) error {
-					return nil
+					return errors.New("DBError")
 				},
 			},
 		},
@@ -197,9 +187,9 @@ func TestDataHandler_CreateMan(t *testing.T) {
 
 				return
 			}
-			// var responseAnswer Man
-			// assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
-			// assert.Equal(t, Man{}, responseAnswer)
+			var responseAnswer Man
+			assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
+			assert.Equal(t, Man{}, responseAnswer)
 
 			fmt.Printf("%d", len(tt.storage.AddCalls()))
 		})
@@ -208,18 +198,18 @@ func TestDataHandler_CreateMan(t *testing.T) {
 }
 
 func TestDataHandler_UpdateMan(t *testing.T) {
-	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/man", nil)
+	req0 := httptest.NewRequest(http.MethodPost, "/man", nil)
+
 	tests := []struct {
-		name    string
-		storage *HumanStorageMock
-		w       http.ResponseWriter
-		r       *http.Request
+		name          string
+		storage       *HumanStorageMock
+		r             *http.Request
+		expectedError string
 	}{
 		{
-			name: "editman",
-			w:    recorder,
-			r:    req,
+			name:          "editman",
+			r:             req0,
+			expectedError: "",
 			storage: &HumanStorageMock{
 				EditFunc: func(Man) error {
 					return nil
@@ -233,7 +223,8 @@ func TestDataHandler_UpdateMan(t *testing.T) {
 			dh := &DataHandler{
 				HumanStorage: tt.storage,
 			}
-			dh.UpdateMan(tt.w, tt.r)
+			recorder := httptest.NewRecorder()
+			dh.UpdateMan(recorder, tt.r)
 			fmt.Printf("%d", len(tt.storage.EditCalls()))
 		})
 	}
