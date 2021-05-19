@@ -14,7 +14,7 @@ import (
 )
 
 func TestDataHandler_GetManByID(t *testing.T) {
-	request := httptest.NewRequest("http.MethodGet", "http://localhost:8080/man/123", nil)
+	request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/man/123", nil)
 	vars := map[string]string{
 		"manID": "abcd",
 	}
@@ -67,11 +67,13 @@ func TestDataHandler_GetManByID(t *testing.T) {
 
 				return
 			}
+			if tt.expectedError == "" {
+				var responseAnswer Man
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
+				assert.Equal(t, Man{}, responseAnswer)
 
-			var responseAnswer Man
-			assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
-			assert.Equal(t, Man{}, responseAnswer)
-
+				return
+			}
 			fmt.Printf("%d", len(tt.storage.GetCalls()))
 		})
 	}
@@ -129,7 +131,13 @@ func TestDataHandler_GetAllMan(t *testing.T) {
 }
 
 func TestDataHandler_CreateMan(t *testing.T) {
-	data1, err := json.Marshal(Man{})
+	testStruct := Man{
+		FirstName: "tra",
+		LastName:  "ta",
+		Height:    111,
+		Weight:    222,
+	}
+	data1, err := json.Marshal(testStruct)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -139,11 +147,15 @@ func TestDataHandler_CreateMan(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          "test Create",
-			r:             httptest.NewRequest(http.MethodPost, "/man", nil),
+			name:          "test_Create and test generate UUID",
+			r:             httptest.NewRequest(http.MethodPost, "/man", bytes.NewReader(data1)),
 			expectedError: "",
 			storage: &HumanStorageMock{
-				AddFunc: func(Man) error {
+				AddFunc: func(m Man) error {
+					assert.NotEmpty(t, m.ID)
+					m.ID = ""
+					assert.Equal(t, testStruct, m)
+
 					return nil
 				},
 			},
@@ -183,13 +195,9 @@ func TestDataHandler_CreateMan(t *testing.T) {
 				var responseErr responseError
 				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
 				assert.Equal(t, tt.expectedError, responseErr.Description)
-				// t.Fatal(tt.expectedError, responseErr.Description)
 
 				return
 			}
-			var responseAnswer Man
-			assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseAnswer))
-			assert.Equal(t, Man{}, responseAnswer)
 
 			fmt.Printf("%d", len(tt.storage.AddCalls()))
 		})
@@ -198,7 +206,18 @@ func TestDataHandler_CreateMan(t *testing.T) {
 }
 
 func TestDataHandler_UpdateMan(t *testing.T) {
-	req0 := httptest.NewRequest(http.MethodPost, "/man", nil)
+	testStruct := Man{
+		ID:        "123",
+		FirstName: "tra",
+		LastName:  "ta",
+		Height:    111,
+		Weight:    222,
+	}
+	muxVars := map[string]string{
+		"manID": "test-UUID",
+	}
+	data1, err := json.Marshal(testStruct)
+	assert.NoError(t, err)
 
 	tests := []struct {
 		name          string
@@ -208,23 +227,61 @@ func TestDataHandler_UpdateMan(t *testing.T) {
 	}{
 		{
 			name:          "editman",
-			r:             req0,
+			r:             mux.SetURLVars(httptest.NewRequest(http.MethodPut, "http://192.168.13.10:8080/man/test-UUID", bytes.NewReader(data1)), muxVars),
 			expectedError: "",
 			storage: &HumanStorageMock{
-				EditFunc: func(Man) error {
+				EditFunc: func(m Man) error {
+					assert.NotEmpty(t, m.ID)
+					assert.Equal(t, testStruct, m)
+
 					return nil
+				},
+			},
+		},
+		{
+			name:          "test bad data in request, decoder error",
+			r:             httptest.NewRequest(http.MethodPut, "http://192.168.13.10:8080/man/123", bytes.NewReader([]byte("test"))),
+			expectedError: "invalid character 'e' in literal true (expecting 'r')",
+			storage: &HumanStorageMock{
+				EditFunc: func(m Man) error {
+					return nil
+				},
+			},
+		},
+		{
+			name:          "test database error",
+			r:             mux.SetURLVars(httptest.NewRequest(http.MethodPut, "http://192.168.13.10:8080/man/test-UUID", bytes.NewReader(data1)), muxVars),
+			expectedError: "DBError",
+			storage: &HumanStorageMock{
+				EditFunc: func(m Man) error {
+					return errors.New("DBError")
 				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			dh := &DataHandler{
 				HumanStorage: tt.storage,
 			}
 			recorder := httptest.NewRecorder()
 			dh.UpdateMan(recorder, tt.r)
+			resultResponse := recorder.Result()
+
+			if tt.expectedError != "" {
+				var responseErr responseError
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
+				assert.Equal(t, tt.expectedError, responseErr.Description)
+
+				return
+			}
+
+			if tt.expectedError == "" {
+				return
+			}
+
 			fmt.Printf("%d", len(tt.storage.EditCalls()))
 		})
 	}
@@ -232,20 +289,37 @@ func TestDataHandler_UpdateMan(t *testing.T) {
 }
 
 func TestDataHandler_DeleteMan(t *testing.T) {
-	recorder := httptest.NewRecorder()
+	muxVars := map[string]string{
+		"manID": "test-UUID",
+	}
+
 	tests := []struct {
-		name    string
-		storage *HumanStorageMock
-		w       http.ResponseWriter
-		r       *http.Request
+		name          string
+		storage       *HumanStorageMock
+		r             *http.Request
+		expectedError string
 	}{
 		{
-			name: "test delete",
-			w:    recorder,
-			r:    &http.Request{},
+			name:          "test delete",
+			r:             mux.SetURLVars(httptest.NewRequest(http.MethodDelete, "http://192.168.13.10:8080/man/test-UUID", nil), muxVars),
+			expectedError: "",
 			storage: &HumanStorageMock{
 				DelFunc: func(id string) error {
+					println("id:", id)
+					assert.Equal(t, id, "test-UUID")
+
 					return nil
+				},
+			},
+		},
+		{
+			name:          "test DB error",
+			r:             mux.SetURLVars(httptest.NewRequest(http.MethodDelete, "http://192.168.13.10:8080/man/test-UUID", nil), muxVars),
+			expectedError: "man not found",
+			storage: &HumanStorageMock{
+				DelFunc: func(id string) error {
+
+					return errors.New("man not found")
 				},
 			},
 		},
@@ -253,10 +327,26 @@ func TestDataHandler_DeleteMan(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt := tt
 			dh := &DataHandler{
 				HumanStorage: tt.storage,
 			}
-			dh.DeleteMan(tt.w, tt.r)
+			recorder := httptest.NewRecorder()
+			dh.DeleteMan(recorder, tt.r)
+			resultResponse := recorder.Result()
+
+			if tt.expectedError != "" {
+				var responseErr responseError
+				assert.NoError(t, json.NewDecoder(resultResponse.Body).Decode(&responseErr))
+				assert.Equal(t, tt.expectedError, responseErr.Description)
+
+				return
+			}
+
+			if tt.expectedError == "" {
+				return
+			}
+
 			fmt.Printf("%d", len(tt.storage.DelCalls()))
 		})
 	}
