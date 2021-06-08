@@ -62,7 +62,7 @@ func (dh *DataHandler) GetManByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["manID"]
 	if !ok {
-		dh.SendError(w, http.StatusBadRequest, ErrManNotFound)
+		dh.SendError(w, http.StatusBadRequest, ErrBadRequest)
 	}
 
 	man, err := dh.HumanStorage.Get(id)
