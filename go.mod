@@ -6,6 +6,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/pat v1.0.1 // indirect
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/markbates/goth v1.67.1 // indirect
 	github.com/matryer/moq v0.2.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect

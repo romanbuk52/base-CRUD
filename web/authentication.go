@@ -7,6 +7,7 @@ import (
 	"sort"
 	"text/template"
 
+	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
@@ -16,9 +17,10 @@ import (
 func (dh *DataHandler) Goth0() *ProviderIndex {
 	goth.UseProviders(
 		// 																														redirect URL
-		github.New(os.Getenv("5a688f38ba7ff9da1f00"), os.Getenv("8cf920e12ddeb44ce7d443e672cd96b5c4423788"), "http://localhost:8080/auth/github/callback"),
+		github.New(os.Getenv("XXXXX"), os.Getenv("XXXX"), "http://localhost:8080/auth/github/callback"),
 	)
 	openidConnect, _ := openidConnect.New(os.Getenv("OPENID_CONNECT_KEY"), os.Getenv("OPENID_CONNECT_SECRET"), "http://localhost:3000/auth/openid-connect/callback", os.Getenv("OPENID_CONNECT_DISCOVERY_URL"))
+	gothic.Store = sessions.NewCookieStore([]byte("XXXX"))
 	if openidConnect != nil {
 		goth.UseProviders(openidConnect)
 	}
