@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrManNotFound = errors.New("Man not found")
-	ErrJsonEncode  = errors.New("Json encode failed")
+	ErrManNotFound = errors.New("man not found")
+	ErrJsonEncode  = errors.New("json encode failed")
+	ErrBadRequest  = errors.New("Err Bad Request")
 )
 
 // responseError it`s structure sending error
