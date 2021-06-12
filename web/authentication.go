@@ -16,14 +16,14 @@ import (
 
 func (dh *DataHandler) Goth0() *ProviderIndex {
 	goth.UseProviders(
-		// 																														redirect URL
-		github.New(os.Getenv("XXXXX"), os.Getenv("XXXX"), "http://localhost:8080/auth/github/callback"),
+		// 													redirect URL
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://localhost:8080/auth/github/callback"),
 	)
-	openidConnect, _ := openidConnect.New(os.Getenv("OPENID_CONNECT_KEY"), os.Getenv("OPENID_CONNECT_SECRET"), "http://localhost:3000/auth/openid-connect/callback", os.Getenv("OPENID_CONNECT_DISCOVERY_URL"))
-	gothic.Store = sessions.NewCookieStore([]byte("XXXX"))
+	openidConnect, _ := openidConnect.New(os.Getenv("OPENID_CONNECT_KEY"), os.Getenv("OPENID_CONNECT_SECRET"), "http://localhost:8080/auth/openid-connect/callback", os.Getenv("OPENID_CONNECT_DISCOVERY_URL"))
 	if openidConnect != nil {
 		goth.UseProviders(openidConnect)
 	}
+	gothic.Store = sessions.NewCookieStore([]byte("dfnklg3234jo5y2oj3t5sdf34er3"))
 
 	m := make(map[string]string)
 	m["github"] = "Github"
@@ -40,7 +40,6 @@ func (dh *DataHandler) Goth0() *ProviderIndex {
 }
 
 func (dh *DataHandler) FCallback(res http.ResponseWriter, req *http.Request) {
-
 	user, err := gothic.CompleteUserAuth(res, req)
 	if err != nil {
 		fmt.Fprintln(res, err)

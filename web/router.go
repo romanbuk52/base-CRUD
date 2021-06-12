@@ -9,7 +9,7 @@ import (
 // NewPeopleStoreRouter router
 func NewPeopleStoreRouter(dh *DataHandler) *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/auth{provider}callback", dh.FCallback).Methods(http.MethodGet)
+	router.HandleFunc("/auth/{provider}/callback", dh.FCallback).Methods(http.MethodGet)
 	router.HandleFunc("/logout/{provider}", dh.Logout).Methods(http.MethodGet)
 	router.HandleFunc("/auth/{provider}", dh.Auth).Methods(http.MethodGet)
 	router.HandleFunc("/auth", dh.DefPageAuth).Methods(http.MethodGet)
