@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"go/parser"
 	"net/http"
 	"os"
 	"sort"
@@ -15,6 +16,9 @@ import (
 )
 
 func (dh *DataHandler) Goth0() *ProviderIndex {
+	gts, ad := parser.ParseFile()
+	os.Setenv("GITHUB_KEY", "123")
+	os.Setenv("GITHUB_SECRET", "12356")
 	goth.UseProviders(
 		// 													redirect URL
 		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://localhost:8080/auth/github/callback"),
