@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  redis:
+    image: redis
+    container_name: redis_base_crud
+    command: redis-server --requirepass Tratata101
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    volumes:
+      - /home/alarm/hdd/redis/base-crud/.:/var/lib/redis
+#      - /home/alarm/hdd/redis/base-crud/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - '6379:6379'
+
+  crudserver:
+    build: .
+    container_name: base_crud
+    volumes:
+      - ~/go/src/crud-server/storageSQL:/go/src/crud-server/storageSQL
+    ports:
+      - '8081:8081'
+    links:
+      - redis
+    depends_on:
+      - redis

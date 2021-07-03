@@ -2,7 +2,6 @@ package web
 
 import (
 	"fmt"
-	"go/parser"
 	"net/http"
 	"os"
 	"sort"
@@ -16,14 +15,12 @@ import (
 )
 
 func (dh *DataHandler) Goth0() *ProviderIndex {
-	gts, ad := parser.ParseFile()
-	os.Setenv("GITHUB_KEY", "123")
-	os.Setenv("GITHUB_SECRET", "12356")
+	os.Setenv("GITHUB_KEY", "ID")
+	os.Setenv("GITHUB_SECRET", "Secret")
 	goth.UseProviders(
-		// 													redirect URL
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://localhost:8080/auth/github/callback"),
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://192.168.13.15:8081/auth/github/callback"),
 	)
-	openidConnect, _ := openidConnect.New(os.Getenv("OPENID_CONNECT_KEY"), os.Getenv("OPENID_CONNECT_SECRET"), "http://localhost:8080/auth/openid-connect/callback", os.Getenv("OPENID_CONNECT_DISCOVERY_URL"))
+	openidConnect, _ := openidConnect.New(os.Getenv("OPENID_CONNECT_KEY"), os.Getenv("OPENID_CONNECT_SECRET"), "http://192.168.13.15:8081/auth/openid-connect/callback", os.Getenv("OPENID_CONNECT_DISCOVERY_URL"))
 	if openidConnect != nil {
 		goth.UseProviders(openidConnect)
 	}

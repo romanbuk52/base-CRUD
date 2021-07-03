@@ -50,7 +50,7 @@ func (dh *DataHandler) GetAllMan(w http.ResponseWriter, r *http.Request) {
 		dh.SendError(w, http.StatusInternalServerError, err)
 		return
 	}
-	//							<<
+
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		dh.SendError(w, http.StatusInternalServerError, err)
 		return
@@ -82,7 +82,6 @@ func (dh *DataHandler) CreateMan(w http.ResponseWriter, r *http.Request) {
 
 	var NewMan Man
 
-	// 								>>
 	if err := json.NewDecoder(r.Body).Decode(&NewMan); err != nil {
 		dh.SendError(w, http.StatusBadRequest, err)
 		return
