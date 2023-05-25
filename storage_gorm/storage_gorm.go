@@ -1,4 +1,4 @@
-package storageSQL
+package storage_gorm
 
 import (
 	"crud-server/web"

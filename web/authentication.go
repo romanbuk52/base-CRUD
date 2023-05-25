@@ -46,7 +46,9 @@ func (dh *DataHandler) FCallback(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(res, err)
 		return
 	}
-
+	fmt.Printf("%+v\n", user)
+	//  шукаємо в базі по: provider, userID, nickname.
+	// якщо знайшли, ствоюємо сесію з UUID і ключемпше дщп
 	t, _ := template.New("foo").Parse(userTemplate)
 	t.Execute(res, user)
 }
