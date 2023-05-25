@@ -1,8 +1,8 @@
-# base-CRUD
+## base-CRUD
 
 It is a study project. 
 
-this project includes:\
+This project includes:\
 web server\
 CRUD\
 Database in memory (map)\
