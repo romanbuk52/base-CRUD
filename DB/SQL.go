@@ -42,6 +42,3 @@ func (dtb *Database) UpdateRec() {
 func (dtb *Database) DelRec() {
 
 }
-
-// func connectDB(password string, ip_addr string, database string) {
-// db, err := sql.Open("mysql", "root:B1xSDjDAQIJjeCDJMNiM@tcp(192.168.83.6:3306)/test_go")
