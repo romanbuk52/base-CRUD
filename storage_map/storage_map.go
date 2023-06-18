@@ -1,4 +1,4 @@
-package storage
+package storage_map
 
 import (
 	"crud-server/web"
@@ -66,7 +66,7 @@ func (d *Data) Edit(m web.Man) error {
 func (d *Data) Del(id string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	delete(d.all, id)
 
 	return nil

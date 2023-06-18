@@ -15,8 +15,6 @@ import (
 )
 
 func (dh *DataHandler) Goth0() *ProviderIndex {
-	os.Setenv("GITHUB_KEY", "ID")
-	os.Setenv("GITHUB_SECRET", "Secret")
 	goth.UseProviders(
 		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), "http://192.168.13.15:8081/auth/github/callback"),
 	)

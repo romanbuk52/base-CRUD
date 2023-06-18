@@ -8,8 +8,8 @@ services:
     environment:
       - REDIS_REPLICATION_MODE=master
     volumes:
-      - /home/alarm/hdd/redis/base-crud/.:/var/lib/redis
-#      - /home/alarm/hdd/redis/base-crud/redis.conf:/usr/local/etc/redis/redis.conf
+      - /hdd/redis/base-crud/data/:/var/lib/redis/
+#      - /hdd/redis/base-crud/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - '6379:6379'
 
@@ -17,7 +17,8 @@ services:
     build: .
     container_name: base_crud
     volumes:
-      - ~/go/src/crud-server/storageSQL:/go/src/crud-server/storageSQL
+      - ./storage_gorm:/go/src/crud-server/storage_gorm
+      - ./usersstorage:/go/src/crud-server/usersstorage
     ports:
       - '8081:8081'
     links:

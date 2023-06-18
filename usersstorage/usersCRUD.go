@@ -10,6 +10,6 @@ type DBUcrud interface {
 	Delete(NickName string) error
 }
 
-func (dbu *DBUHandler) AddUser(w http.ResponseWriter, r *http.Request) {
+func (dbu *DBUHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 }
